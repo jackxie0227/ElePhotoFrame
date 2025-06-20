@@ -1,0 +1,38 @@
+IO_LOC "RX" 10;
+IO_LOC "TX" 9;
+IO_LOC "CLK_50MHZ" 6;
+IO_LOC "RST" 92;
+
+IO_LOC "wifi_boot" 76;
+IO_LOC "wifi_cnt" 71;
+IO_LOC "wifi_reset" 78;
+IO_LOC "wifi_rxd" 75;
+IO_LOC "wifi_txd" 72;
+
+
+
+IO_LOC "SEG[0]" 106;
+IO_LOC "SEG[1]" 102;
+IO_LOC "SEG[2]" 100;
+IO_LOC "SEG[3]" 98;
+IO_LOC "SEG[4]" 97;
+IO_LOC "SEG[5]" 104;
+IO_LOC "SEG[6]" 101;
+IO_LOC "SEG[7]" 99;
+
+IO_LOC "DIG[0]" 110;
+IO_LOC "DIG[1]" 111;
+IO_LOC "DIG[2]" 112;
+IO_LOC "DIG[3]" 113;
+IO_LOC "DIG[4]" 119;
+IO_LOC "DIG[5]" 122;
+
+IO_LOC "LED[0]" 63;
+IO_LOC "LED[1]" 62;
+IO_LOC "LED[2]" 61;
+IO_LOC "LED[3]" 60;
+IO_LOC "LED[4]" 59;
+IO_LOC "LED[5]" 58;
+IO_LOC "LED[6]" 57;
+IO_LOC "LED[7]" 56;
+

@@ -1,0 +1,5 @@
+Example/
+work/
+fpga_project/impl/
+*.gprj
+*.user

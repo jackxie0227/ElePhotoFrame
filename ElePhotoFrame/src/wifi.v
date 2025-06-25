@@ -1,10 +1,10 @@
 module wifi(
     output CNT,
     output BOOT,
-    output wifi_reset
+    output RESET
 );
 
-assign wifi_reset = 1;
+assign RESET = 1;
 assign BOOT = 1;
 assign CNT = 0;
 

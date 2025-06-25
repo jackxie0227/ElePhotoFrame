@@ -29,10 +29,10 @@ def parse_args():
     return parser.parse_args()
 
 # img => bytes
-def image2bytes(image_path):
+def image2bytes(args):
     # resize
-    img = Image.open(image_path)
-    img = img.resize((1024, 768), Image.LANCZOS)
+    img = Image.open(args.img)
+    img = img.resize((100, 100), Image.LANCZOS)
     if img.mode != 'RGB':
         img = img.convert('RGB')
     
@@ -40,19 +40,29 @@ def image2bytes(image_path):
     img_array = np.array(img)
     img_bytes = bytearray()
     
-    # RGB565 压缩
-    for y in range(img_array.shape[0]): # 
+    # RGB444 压缩（12位色彩深度，每个颜色分量4位）
+    for y in range(img_array.shape[0]):
         for x in range(img_array.shape[1]):
             r, g, b = img_array[y, x]
-            rgb565 = ((r & 0xF8)<<8)|((g & 0xFC)<<3)|(b>>3)
-            img_bytes.append((rgb565 >> 8) & 0xFF)
-            img_bytes.append(rgb565 & 0xFF)
+            # 转换为RGB444格式：每个颜色分量取高4位
+            r4 = (r >> 4) & 0xF  # 取高4位
+            g4 = (g >> 4) & 0xF
+            b4 = (b >> 4) & 0xF
+            
+            # 组合为12位RGB444，打包成两个字节发送
+            # 字节1: [R3 R2 R1 R0 G3 G2 G1 G0]
+            # 字节2: [B3 B2 B1 B0 0  0  0  0] 或者可以与其他像素数据合并
+            byte1 = (r4 << 4) | g4
+            byte2 = (b4 << 4)  # 低4位为0
+            
+            img_bytes.append(byte1)
+            img_bytes.append(byte2)
             
     return img_bytes
 
-def connet_init(host_ip, host_port):
+def connet_init(args):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((host_ip, host_port))
+    server.bind((args.ip, args.post))
     print(f"等待连接 {args.ip}:{args.port}...")
   
     conn, addr = server.accept()  
@@ -111,13 +121,15 @@ def send_bytes(args):
     except Exception as e:
         print(f"图片字节流数据发送失败：{e}")
         sys.exit(1)
+    finally:
+        conn.close()
+        server.close()
         
-    
     
 if __name__ == '__main__':
     base_dir = os.path.dirname(os.path.abspath(__file__))
     imagefoler_dir = os.path.join(base_dir, 'images')
-    image_path = os.path.join(imagefoler_dir, 'sunset.png')
+    image_path = os.path.join(imagefoler_dir, 'test.jpg')
     
     args = parse_args()
     args.img = image_path

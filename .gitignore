@@ -3,3 +3,6 @@ work/
 fpga_project/impl/
 *.gprj
 *.user
+*/impl
+modelsim/
+ElePhotoFrame/sim/

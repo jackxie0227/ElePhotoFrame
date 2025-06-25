@@ -12,10 +12,11 @@ def run_as_server():
     print(f"ESP连接成功: {addr}")
   
     # 发送数据到ESP
-    data = bytes([0xA5])
+    data = bytes([0x5A])
     conn.send(data)
-    print("已发送:", data.hex())
-  
+    ack = conn.recv(1)
+    if ack:
+        print(f"收到回复：{ack.hex()}")
     conn.close()
   
 if __name__ == '__main__':

@@ -109,7 +109,7 @@ always@(posedge i_clk_sys or negedge i_rst_n)
             baud_pulse <= 1'b1;
         else
             baud_pulse <= 1'b0;
-        o_baud_pulse <= baud_pulse; 
+    //    o_baud_pulse <= baud_pulse; 
     end
 
 
@@ -127,7 +127,7 @@ always@(posedge i_clk_sys or negedge i_rst_n)
             r_current_state <= STATE_IDLE;
         else if(baud_valid && baud_cnt == 16'h0000)
             r_current_state <= r_next_state;
-        o_state <= r_current_state;
+    //    o_state <= r_current_state;
     end
 
 /************************状态机次态更新************************/

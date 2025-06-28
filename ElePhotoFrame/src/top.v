@@ -9,16 +9,20 @@ module top(
     // input        i_test_scd_flag,
     // output       o_test_tx,
 
+    // UART
+    input i_uart_rx,
+    output o_uart_tx,
+
     // FPGA 基础参数
     input i_clk_sys,                  
     input i_rst_n,
     
     // WIFI 模块
-    input wifi_txd,
-    output wifi_rxd,
-    output wifi_cnt,
-    output wifi_boot,
-    output wifi_reset,
+    input i_wifi_txd,
+    output o_wifi_rxd,
+    output o_wifi_cnt,
+    output o_wifi_boot,
+    output o_wifi_reset,
 
     // 数码管模块
     output [7:0] SEG,
@@ -28,7 +32,7 @@ module top(
     // VGA 模块
     output VGA_HS,
     output VGA_VS,
-    output wire [11:0] VGA_RGB
+    output VGA_RGB
 );
 
 /********************** 时钟模块 **********************/
@@ -36,23 +40,12 @@ module top(
 // output clk_uart: 串口通信 9600bps(153.6khz) 时钟信号
 // output clk_100k: 数码管时钟信号
 /*****************************************************/
-wire clk_uart; 
+wire clk_25m; 
 wire clk_100k;
 clkdiv u_clkdiv(
     .clk_50m(i_clk_sys),
-    .clk_uart(clk_uart),
+    .clk_25m(clk_25m),
     .clk_100k(clk_100k)
-);
-
-/************************* WIFI模块 *************************/
-// output   CNT: WIFI模块电源信号 低电平供电             SET->0
-// output  BOOT: 程序加载选择信号 高电平时从内部Flash加载 SET->1
-// output RESET: 复位信号 低电平复位                     SET->1
-/************************************************************/
-wifi u_wifi(
-    .CNT(wifi_cnt),
-    .BOOT(wifi_boot),
-    .RESET(wifi_reset)
 );
 
 /************************* 串口通信模块 *************************/
@@ -107,9 +100,6 @@ uart_rx
     .o_rx_done(w_rx_done)
 );
 
-// WIFI 串口连接
-assign wifi_rxd = w_tx;
-assign wifi_txd = w_rx;
 
 // 测试 UART_RX
 // assign w_rx            = i_test_rx;
@@ -121,7 +111,71 @@ assign wifi_txd = w_rx;
 // assign w_tx_valid = i_test_scd_flag;
 // assign o_test_tx  = w_tx;
 
+
+/************************* WIFI模块 *************************/
+// output   CNT: WIFI模块电源信号 低电平供电             SET->0
+// output  BOOT: 程序加载选择信号 高电平时从内部Flash加载 SET->1
+// output RESET: 复位信号 低电平复位                     SET->1
+/************************************************************/
+wifi u_wifi(
+    .CNT(o_wifi_cnt),
+    .BOOT(o_wifi_boot),
+    .RESET(o_wifi_reset)
+);
+// WIFI 串口连接
+assign o_wifi_rxd = w_tx;
+assign w_rx = i_wifi_txd;
+
+
+/************************* 数码管模块 *************************/
+/*************************************************************/
+wire [7:0] seg_data;
+seg u_seg(
+    .i_data(seg_data),
+    .i_clk(clk_100k),
+    .i_rst_n(i_rst_n),
+    .SEG(SEG),
+    .DIG(DIG)
+);
+assign seg_data = w_state;
+
 /************************* 状态机模块 *************************/
 /*************************************************************/
+wire [7:0] i_data;
+assign i_data = w_rx_data;
+wire [7:0] w_state;
+state u_state(
+    .i_clk_sys(i_clk_sys),
+    .i_rst_n(i_rst_n),
+    .i_data(i_data),
+    .i_rx_done(w_rx_done),
+    .o_state(w_state)
+);
+
+
+
+/************************** VGA 模块 **************************/
+/**************************************************************/
+wire [9:0] xpos;
+wire [9:0] ypos;
+vga u_vga(
+    .clk(i_clk_sys),
+    .xpos(xpos),
+    .ypos(ypos),
+    .VGA_HS(VGA_HS),
+    .VGA_VS(VGA_VS)
+);
+
+
+/************************** 显示控制模块 **************************/
+/*****************************************************************/
+wire [11:0] VGA_RGB;
+display u_display(
+    .clk(i_clk_sys),
+    .xpos(xpos),
+    .ypos(ypos),
+    .VGA_RGB(VGA_RGB)
+);
+
 
 endmodule

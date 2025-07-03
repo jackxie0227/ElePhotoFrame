@@ -1,5 +1,5 @@
 module seg (
-    input i_data,
+    input [7:0] i_data,
     input i_rst_n,
     input i_clk,
     output reg [7:0] SEG,
@@ -8,8 +8,6 @@ module seg (
 
 reg wei;
 
-
-wire [7:0] i_data;
 reg [15:0] data1;
 
 always@(posedge i_clk)

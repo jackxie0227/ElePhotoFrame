@@ -17,10 +17,7 @@ def parse_args():
     parser.add_argument('--port',
                         type=int, default=5130,
                         help='your host port [int]')
-    parser.add_argument('--START_MARKER',
-                        type=bytes, default=bytes([0xA5]),
-                        help='start signal to inform fpga')
-    parser.add_argument('--END_MARKER',
+    parser.add_argument('--STATECHANGE_BYTE',
                         type=bytes, default=bytes([0x5A]),
                         help='end signal to inform fpga')
     parser.add_argument('--chunk_size',
@@ -32,13 +29,14 @@ def parse_args():
 def image2bytes(args):
     # resize
     img = Image.open(args.img)
-    img = img.resize((100, 100), Image.LANCZOS)
+    img = img.resize((50, 40), Image.LANCZOS)
     if img.mode != 'RGB':
         img = img.convert('RGB')
     
     # img -> numpy -> bytes
     img_array = np.array(img)
     img_bytes = bytearray()
+    check_bytes = bytearray()
     
     # RGB444 压缩（12位色彩深度，每个颜色分量4位）
     for y in range(img_array.shape[0]):
@@ -52,17 +50,22 @@ def image2bytes(args):
             # 组合为12位RGB444，打包成两个字节发送
             # 字节1: [R3 R2 R1 R0 G3 G2 G1 G0]
             # 字节2: [B3 B2 B1 B0 0  0  0  0] 或者可以与其他像素数据合并
-            byte1 = (r4 << 4) | g4
-            byte2 = (b4 << 4)  # 低4位为0
+            byte1 = (b4 << 4) | g4
+            byte2 = (r4 << 4)  # 低4位为0
             
             img_bytes.append(byte1)
             img_bytes.append(byte2)
             
-    return img_bytes
+            check_byte = ((byte1 & 0x80) >> 0) | ((byte1 & 0x10) >> 0) | ((byte1 & 0x08) >> 0) | ((byte1 & 0x01) << 4) | \
+                         ((byte2 & 0x80) >> 4) | ((byte2 & 0x10) >> 4) | ((byte2 & 0x08) >> 4) | ((byte2 & 0x01) >> 0)
+            check_bytes.append(check_byte)
+            
+    return img_bytes, check_bytes
 
 def connet_init(args):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((args.ip, args.post))
+    server.bind((args.ip, args.port))
+    server.listen(1)
     print(f"等待连接 {args.ip}:{args.port}...")
   
     conn, addr = server.accept()  
@@ -73,24 +76,23 @@ def connet_init(args):
 def send_bytes(args):
     # img -> bytes
     try:
-        img_bytes = image2bytes(args.img)
+        img_bytes, check_bytes = image2bytes(args)
     except Exception as e:
         print(f"图片处理失败: {e}")
         sys.exit(1)
     
     # server init (hostmode connection initialize)
-    try:
-        server, conn = connet_init(args)
-    except Exception as e:
-        print(f"连接失败: {e}")
-        sys.exit(1)
+    
+    server, conn = connet_init(args)
+    
+    check_idx = 0
     
     try:
         total_sent = 0
         total_size = len(img_bytes)
         
-        conn.send(args.START_MARKER) # send start bytes
-        time.sleep(0.1)
+        # conn.send(args.START_MARKER) # send start bytes
+        # time.sleep(0.1)
         
         start_time = time.time()
         chunk_size = args.chunk_size
@@ -98,6 +100,13 @@ def send_bytes(args):
             # send chunk bytes data
             chunk = img_bytes[i:i+chunk_size] 
             conn.send(chunk) 
+            # if i % 2 == 1:
+            #     rcv = conn.recv(1)
+            #     if rcv.hex() != check_bytes[check_idx]:
+            #         print(f"\nexpect:{check_bytes[check_idx]} received:{rcv.hex()}")
+            #     else:
+            #         print(f"\nexpect:{check_bytes[check_idx]} received:{rcv.hex()}")
+            #     check_idx += 1
             total_sent += len(chunk)
             
             # show progress
@@ -116,7 +125,7 @@ def send_bytes(args):
             time.sleep(0.01)
             
         print('\n图片字节流发送完成')
-        conn.send(args.END_MARKER)
+        conn.send(args.STATECHANGE_BYTE) # 跳转至 state=3 显示图片
         return True
     except Exception as e:
         print(f"图片字节流数据发送失败：{e}")
@@ -129,7 +138,7 @@ def send_bytes(args):
 if __name__ == '__main__':
     base_dir = os.path.dirname(os.path.abspath(__file__))
     imagefoler_dir = os.path.join(base_dir, 'images')
-    image_path = os.path.join(imagefoler_dir, 'test.jpg')
+    image_path = os.path.join(imagefoler_dir, 'usahana.jpg')
     
     args = parse_args()
     args.img = image_path

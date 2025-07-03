@@ -1,13 +1,16 @@
 module top(
-    // UART_RX 测试
-    // input        i_test_rx,
-    // output       o_test_rcv_flag,
-    // output [7:0] o_test_data,
-
-    // UART_TX 测试
-    // input  [7:0] i_test_scd_data,
-    // input        i_test_scd_flag,
-    // output       o_test_tx,
+    // 测试
+    // input         i_test_rcv,
+    // output        o_test_rcv_flag,
+    // output [7:0]  o_test_rcv_data,
+    // output [7:0]  o_test_scd_data,
+    // output        o_test_scd_flag,
+    // output [11:0] o_test_pix_data,
+    // output        o_test_pix_valid,
+    // output        o_test_receiving,
+    // output [7:0]  o_test_state,
+    // output [3:0]  o_test_rcv_state,
+    // output [14:0] o_test_pix_cnt,
 
     // UART
     input i_uart_rx,
@@ -32,45 +35,89 @@ module top(
     // VGA 模块
     output VGA_HS,
     output VGA_VS,
-    output VGA_RGB
+    output [11:0] VGA_RGB
 );
 
-/********************** 时钟模块 **********************/
-// input   clk_50m: 系统 50mhz 时钟信号
-// output clk_uart: 串口通信 9600bps(153.6khz) 时钟信号
-// output clk_100k: 数码管时钟信号
-/*****************************************************/
-wire clk_25m; 
-wire clk_100k;
+/********************** 参数定义 **********************/
+// 串口通信参数
+localparam CLK_FRE = 50;
+localparam DATA_WIDTH = 8;
+localparam BAUD_RATE = 9600;
+localparam PARITY_ON = 0;
+
+/********************** 内部信号定义 **********************/
+// 时钟信号
+wire clk_25m;                         // 25MHz时钟
+wire clk_100k;                        // 100KHz时钟
+
+// 串口通信信号
+wire [DATA_WIDTH-1 : 0] w_tx_data;    // 串口发送数据
+wire [DATA_WIDTH-1 : 0] w_rx_data;    // 串口接收数据
+wire w_tx_valid;                      // 发送数据有效标志
+wire w_rx_done;                       // 接收数据完成标志
+wire w_tx;                            // 串口发送信号线
+wire w_rx;                            // 串口接收信号线
+
+// 像素数据处理相关信号
+wire [11:0] pix_data;                 // 像素数据
+wire        pix_valid;                // 像素有效标志
+wire [7:0]  check_code;               // 校验码
+wire        check_valid;              // 校验有效标志
+wire        image_receiving;          // 正在接收图像标志
+wire [3:0]  w_rcv_state;              // 当前接收字节状态 （首字节/第二个字节）
+wire [14:0] pix_cnt;                  // 当前接收像素数量
+
+// 状态机相关信号
+wire [7:0] i_data;                    // 状态机输入数据
+wire [7:0] w_state;                   // 当前系统状态 1 2 3
+wire [7:0] reply_data;                // 回复数据
+wire       reply_valid;               // 回复有效标志
+
+// VGA显示相关信号
+wire [9:0] xpos;                      // 显示X坐标
+wire [9:0] ypos;                      // 显示Y坐标
+wire [11:0] pixel_data;               // 像素显示数据
+
+// 数码管相关信号
+wire [7:0] seg_data;                  // 数码管显示数据
+
+/********************** 信号连接和赋值 **********************/
+// 测试信号连接
+// assign w_rx = i_test_rcv;
+// assign o_test_rcv_data = w_rx_data;
+// assign o_test_rcv_flag = w_rx_done;
+// assign o_test_scd_data = w_tx_data;
+// assign o_test_scd_flag = w_tx_valid;
+// assign o_test_pix_data = pix_data;
+// assign o_test_pix_valid = pix_valid;
+// assign o_test_receiving = image_receiving;
+// assign o_test_state = w_state;
+// assign o_test_rcv_state = w_rcv_state;
+// assign o_test_pix_cnt = pix_cnt;
+
+// WIFI串口连接
+assign o_wifi_rxd = w_tx;
+assign w_rx = i_wifi_txd;
+
+// 状态机输入连接
+assign i_data = w_rx_data;
+
+// 数据发送逻辑 防止两个输入冲突
+assign w_tx_data = ((image_receiving && w_state==2) ? check_code : reply_data);
+assign w_tx_valid = ((image_receiving && w_state==2) ? check_valid : reply_valid);
+
+// 数码管显示内容
+assign seg_data = w_state;
+
+/********************** 模块实例化 **********************/
+// 时钟分频模块
 clkdiv u_clkdiv(
     .clk_50m(i_clk_sys),
     .clk_25m(clk_25m),
     .clk_100k(clk_100k)
 );
 
-/************************* 串口通信模块 *************************/
-// param CLK_FRE    : 系统时钟频率        默认50m
-// param DATA_WIDTH : 有效数据位          默认8位
-// param BAUD_RATE  : 波特率             默认9600
-// param PARITY_ON  : 校验位             默认0 无校验位
-/***************************************************************/
-// wire  w_tx       : 发送数据线      
-// wire  w_rx       : 接收数据线  
-// wire  w_tx_data  : 发送数据        
-// wire  w_rx_data  : 接收数据        
-// wire  w_tx_valid : 发送数据有效标志位  高电平有效
-// wire  w_tx_done  : 发送数据有效标志位  高电平有效
-/***************************************************************/
-localparam CLK_FRE = 50;
-localparam DATA_WIDTH = 8;
-localparam BAUD_RATE = 9600;
-localparam PARITY_ON = 0;
-wire [DATA_WIDTH-1 : 0] w_tx_data;
-wire [DATA_WIDTH-1 : 0] w_rx_data;
-wire w_tx_valid;
-wire w_rx_done;
-wire w_tx; 
-wire w_rx;
+// 串口发送模块
 uart_tx 
 #(
     .CLK_FRE(CLK_FRE),
@@ -85,6 +132,8 @@ uart_tx
     .i_data_valid(w_tx_valid),
     .o_uart_tx(w_tx)
 );
+
+// 串口接收模块
 uart_rx
 #(
     .CLK_FRE(CLK_FRE),
@@ -100,64 +149,41 @@ uart_rx
     .o_rx_done(w_rx_done)
 );
 
-
-// 测试 UART_RX
-// assign w_rx            = i_test_rx;
-// assign o_test_rcv_flag = w_rx_done;
-// assign o_test_data     = w_rx_data;
-
-// 测试 UART_TX
-// assign w_tx_data  = i_test_scd_data;
-// assign w_tx_valid = i_test_scd_flag;
-// assign o_test_tx  = w_tx;
-
-
-/************************* WIFI模块 *************************/
-// output   CNT: WIFI模块电源信号 低电平供电             SET->0
-// output  BOOT: 程序加载选择信号 高电平时从内部Flash加载 SET->1
-// output RESET: 复位信号 低电平复位                     SET->1
-/************************************************************/
+// WIFI模块
 wifi u_wifi(
     .CNT(o_wifi_cnt),
     .BOOT(o_wifi_boot),
     .RESET(o_wifi_reset)
 );
-// WIFI 串口连接
-assign o_wifi_rxd = w_tx;
-assign w_rx = i_wifi_txd;
 
-
-/************************* 数码管模块 *************************/
-/*************************************************************/
-wire [7:0] seg_data;
-seg u_seg(
-    .i_data(seg_data),
-    .i_clk(clk_100k),
+// 像素数据接收模块
+rcv u_rcv(
+    .i_clk_sys(i_clk_sys),
     .i_rst_n(i_rst_n),
-    .SEG(SEG),
-    .DIG(DIG)
+    .i_rx_data(w_rx_data),
+    .i_rx_done(w_rx_done),
+    .i_state(w_state),
+    .image_receiving(image_receiving),
+    .o_rcv_state(w_rcv_state),
+    .o_pix(pix_data),
+    .o_pix_valid(pix_valid),
+    .o_check_code(check_code),
+    .o_check_valid(check_valid)
 );
-assign seg_data = w_state;
 
-/************************* 状态机模块 *************************/
-/*************************************************************/
-wire [7:0] i_data;
-assign i_data = w_rx_data;
-wire [7:0] w_state;
+// 状态机模块
 state u_state(
     .i_clk_sys(i_clk_sys),
     .i_rst_n(i_rst_n),
     .i_data(i_data),
     .i_rx_done(w_rx_done),
-    .o_state(w_state)
+    .image_receiving(image_receiving),
+    .o_state(w_state),
+    .o_data(reply_data),
+    .o_valid(reply_valid)
 );
 
-
-
-/************************** VGA 模块 **************************/
-/**************************************************************/
-wire [9:0] xpos;
-wire [9:0] ypos;
+// VGA控制模块
 vga u_vga(
     .clk(i_clk_sys),
     .xpos(xpos),
@@ -166,16 +192,37 @@ vga u_vga(
     .VGA_VS(VGA_VS)
 );
 
-
-/************************** 显示控制模块 **************************/
-/*****************************************************************/
-wire [11:0] VGA_RGB;
+// 显示控制模块
 display u_display(
     .clk(i_clk_sys),
     .xpos(xpos),
     .ypos(ypos),
+    .state(w_state),
+    .pixel_data(pixel_data),
     .VGA_RGB(VGA_RGB)
 );
 
+// RAM模块
+ram u_ram(
+    .clk(i_clk_sys),
+    .state(w_state),
+    .rx_valid(pix_valid),
+    .rx_data(pix_data),
+    .x_addr(xpos),
+    .y_addr(ypos),
+    .pix_cnt(pix_cnt),
+    .pixel_data(pixel_data),
+    .image_complete(image_complete),
+    .image_receiving(image_receiving)
+);
+
+// 数码管模块
+seg u_seg(
+    .i_data(seg_data),
+    .i_clk(clk_100k),
+    .i_rst_n(i_rst_n),
+    .SEG(SEG),
+    .DIG(DIG)
+);
 
 endmodule

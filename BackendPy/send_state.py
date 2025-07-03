@@ -1,3 +1,5 @@
+# 仅用于测试发送字节数据
+# 0x5A - 跳转状态
 import socket
 def run_as_server():
     HOST = '0.0.0.0'  # 本机IP

@@ -1,0 +1,43 @@
+D:/CodeSoftware/Gowin/Project/ElePhotoFrame/PixSend/src/seg.v {1 {vlog -work work -vopt -stats=none D:/CodeSoftware/Gowin/Project/ElePhotoFrame/PixSend/src/seg.v
+Model Technology ModelSim SE-64 vlog 2020.4 Compiler 2020.10 Oct 13 2020
+-- Compiling module seg
+
+Top level modules:
+	seg
+
+} {} {}} D:/CodeSoftware/Gowin/Project/ElePhotoFrame/PixSend/src/wifi.v {1 {vlog -work work -vopt -stats=none D:/CodeSoftware/Gowin/Project/ElePhotoFrame/PixSend/src/wifi.v
+Model Technology ModelSim SE-64 vlog 2020.4 Compiler 2020.10 Oct 13 2020
+-- Compiling module wifi
+
+Top level modules:
+	wifi
+
+} {} {}} D:/CodeSoftware/Gowin/Project/ElePhotoFrame/PixSend/sim/rcv_test.v {1 {vlog -work work -vopt -stats=none D:/CodeSoftware/Gowin/Project/ElePhotoFrame/PixSend/sim/rcv_test.v
+Model Technology ModelSim SE-64 vlog 2020.4 Compiler 2020.10 Oct 13 2020
+-- Compiling module rcv_test
+
+Top level modules:
+	rcv_test
+
+} {} {}} D:/CodeSoftware/Gowin/Project/ElePhotoFrame/PixSend/src/rcv.v {1 {vlog -work work -vopt -stats=none D:/CodeSoftware/Gowin/Project/ElePhotoFrame/PixSend/src/rcv.v
+Model Technology ModelSim SE-64 vlog 2020.4 Compiler 2020.10 Oct 13 2020
+-- Compiling module rcv
+
+Top level modules:
+	rcv
+
+} {} {}} D:/CodeSoftware/Gowin/Project/ElePhotoFrame/PixSend/src/clkdiv.v {1 {vlog -work work -vopt -stats=none D:/CodeSoftware/Gowin/Project/ElePhotoFrame/PixSend/src/clkdiv.v
+Model Technology ModelSim SE-64 vlog 2020.4 Compiler 2020.10 Oct 13 2020
+-- Compiling module clkdiv
+
+Top level modules:
+	clkdiv
+
+} {} {}} D:/CodeSoftware/Gowin/Project/ElePhotoFrame/PixSend/src/uart_rx.v {1 {vlog -work work -vopt -stats=none D:/CodeSoftware/Gowin/Project/ElePhotoFrame/PixSend/src/uart_rx.v
+Model Technology ModelSim SE-64 vlog 2020.4 Compiler 2020.10 Oct 13 2020
+-- Compiling module uart_rx
+
+Top level modules:
+	uart_rx
+
+} {} {}}

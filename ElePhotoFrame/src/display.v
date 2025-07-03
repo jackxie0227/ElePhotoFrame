@@ -1,27 +1,19 @@
 module display(
     input clk,
-    input [9:0] xpos ,
-    input [9:0] ypos ,
-    output reg [11:0] VGA_RGB
-);
-
-wire valid ;
-assign valid=(xpos>200)&&(xpos<600)&&(ypos>150)&&(ypos<450);
-//产生彩色条纹
-always @(posedge clk)
-    begin
-        if(valid)
-        begin
-            if ((xpos>200)&&(xpos<250)) VGA_RGB=12'b1111_1111_1111;
-            else if ((xpos>250)&&(xpos<300)) VGA_RGB=12'b0000_0000_1111;
-            else if ((xpos>300)&&(xpos<350)) VGA_RGB=12'b0000_1111_0000;
-            else if ((xpos>350)&&(xpos<400)) VGA_RGB=12'b0000_1111_1111;
-            else if ((xpos>400)&&(xpos<450)) VGA_RGB=12'b1111_0000_0000;
-            else if ((xpos>450)&&(xpos<500)) VGA_RGB=12'b1111_0000_1111;
-            else if ((xpos>500)&&(xpos<550)) VGA_RGB=12'b1111_1111_0000;
-            else if ((xpos>550)&&(xpos<600)) VGA_RGB=12'b1111_1111_1111;
+    input [9:0] xpos,
+    input [9:0] ypos,
+    input [7:0] state,          // 当前系统状态
+    input [11:0] pixel_data,    // 来自RAM的像素数据
+    output reg [11:0] VGA_RGB   // 输出到VGA显示器的RGB数据
+); 
+    // 显示逻辑
+    always @(posedge clk) begin
+        if (state == 8'h03) begin
+            // 在状态3（显示状态）下，显示RAM中的像素数据
+            VGA_RGB <= pixel_data;
+        end else begin
+            // 其他状态显示黑色
+            VGA_RGB <= 12'h000;  // 黑色
         end
-        else  VGA_RGB=12'b0000_0000_0000;
     end
-
 endmodule

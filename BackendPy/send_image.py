@@ -48,8 +48,6 @@ def image2bytes(args):
             b4 = (b >> 4) & 0xF
             
             # 组合为12位RGB444，打包成两个字节发送
-            # 字节1: [R3 R2 R1 R0 G3 G2 G1 G0]
-            # 字节2: [B3 B2 B1 B0 0  0  0  0] 或者可以与其他像素数据合并
             byte1 = (b4 << 4) | g4
             byte2 = (r4 << 4)  # 低4位为0
             
@@ -133,9 +131,8 @@ def send_bytes(args):
     finally:
         conn.close()
         server.close()
-        
-    
-if __name__ == '__main__':
+
+def run():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     imagefoler_dir = os.path.join(base_dir, 'images')
     image_path = os.path.join(imagefoler_dir, 'usahana.jpg')
@@ -145,3 +142,7 @@ if __name__ == '__main__':
     
     if(send_bytes(args)):
         print('\ncomplete!')
+        
+    
+if __name__ == '__main__':
+    run()

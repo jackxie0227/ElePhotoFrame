@@ -2,3 +2,8 @@ Example/
 work/
 fpga_project/impl/
 */impl
+*.pyc
+
+/PixSend
+/Seg
+/SPI

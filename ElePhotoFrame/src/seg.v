@@ -12,7 +12,6 @@ reg [15:0] data1;
 
 always@(posedge i_clk)
 begin
-     
      case(i_data[3:0])
         4'h0 : data1[7:0]=~8'b11000000;
         4'h1 : data1[7:0]=~8'b11111001;

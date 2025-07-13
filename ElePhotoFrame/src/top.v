@@ -47,7 +47,7 @@ localparam PARITY_ON = 0;
 
 /********************** 内部信号定义 **********************/
 // 时钟信号
-wire clk_25m;                         // 25MHz时钟
+wire clk_5m;                         // 25MHz时钟
 wire clk_100k;                        // 100KHz时钟
 
 // 串口通信信号
@@ -113,7 +113,7 @@ assign seg_data = w_state;
 // 时钟分频模块
 clkdiv u_clkdiv(
     .clk_50m(i_clk_sys),
-    .clk_25m(clk_25m),
+    .clk_5m(clk_5m),
     .clk_100k(clk_100k)
 );
 

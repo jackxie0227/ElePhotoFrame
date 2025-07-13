@@ -15,7 +15,8 @@ module ram(
     parameter PIX_TOTAL = W * H;       // 总像素数
     
     // 图像存储区
-    reg [11:0] img [0:PIX_TOTAL-1];
+	reg [11:0] img [0:PIX_TOTAL-1];
+    
     
     // 像素计数器
     // reg [14:0] pix_cnt;

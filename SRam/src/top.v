@@ -83,6 +83,7 @@ wire [11:0] pixel_data;               // 像素显示数据
 assign o_wifi_rxd = w_tx;
 assign w_rx = i_wifi_txd;
 
+
 // 状态机输入连接
 assign i_data = w_rx_data;
 

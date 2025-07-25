@@ -64,6 +64,7 @@ wire        spram_wre;
 wire [14:0] spram_addr;
 wire [11:0] spram_din;
 wire [11:0] spram_dout;
+wire        spram_rd_sig;
 
 // 状态机控制信号
 wire [7:0] i_data;
@@ -172,6 +173,8 @@ state u_state(
 // VGA控制模块
 vga u_vga(
     .clk(i_clk_sys),
+    .state(w_state),
+    .spram_rd_sig(spram_rd_sig),
     .xpos(xpos),
     .ypos(ypos),
     .VGA_HS(VGA_HS),
@@ -203,6 +206,7 @@ ram u_ram(
     .image_complete(image_complete),
     .image_receiving(image_receiving),
     .spram_rd_data(spram_dout),
+    .spram_rd_sig(spram_rd_sig),
     .spram_wr_data(spram_din),
     .spram_wre(spram_wre)
 );

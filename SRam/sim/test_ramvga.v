@@ -1,6 +1,6 @@
 `timescale 10ns/1ns
 
-module test_ram;
+module test_ramvga;
     reg i_clk_sys;
     reg i_rst_n;
     initial begin
@@ -12,6 +12,7 @@ module test_ram;
         end
     end
 
+    /* 变量定义 */
     reg [7:0] state = 8'h01;
     reg rx_valid = 0;
     reg [11:0] rx_data;
@@ -20,26 +21,47 @@ module test_ram;
     wire        spram_wre;
     wire        spram_wr_req;
     wire        spram_rd_flag;
+    wire        spram_rd_sig;
     wire        image_receiving;
     wire        image_complete;
     wire        image_reading;
     wire [14:0] pix_cnt;
     wire [7:0]  buffer_cnt;
+    
+    wire [9:0] x_addr;
+    wire [9:0] y_addr;
+    wire VGA_HS;
+    wire VGA_VS;
+
+    /* 模块定义 */
     ram u_ram(
         .clk(i_clk_sys),
         .state(state),
         .rx_valid(rx_valid),
         .rx_data(rx_data),
+        .x_addr(x_addr),
+        .y_addr(y_addr),
         .spram_wr_req(spram_wr_req),
         .spram_addr(spram_addr),
         .spram_wr_data(spram_wr_data),
         .spram_wre(spram_wre),
+        .spram_rd_sig(spram_rd_sig),
         .spram_rd_flag(spram_rd_flag),
         .pix_cnt(pix_cnt),
         .buffer_cnt(buffer_cnt),
         .image_complete(image_complete),
         .image_reading(image_reading),
         .image_receiving(image_receiving)
+    );
+
+    vga u_vga(
+        .clk(i_clk_sys),
+        .state(state),
+        .spram_rd_sig(spram_rd_sig),
+        .xpos(x_addr),
+        .ypos(y_addr),
+        .VGA_HS(VGA_HS),
+        .VGA_VS(VGA_VS)
     );
 
     task rx_byte;
@@ -53,33 +75,14 @@ module test_ram;
         end
     endtask
 
-    //* 上升沿clk触发
     initial begin
-        #5;
-        state = 8'h02;
-        #2;
-        rx_byte(12'h375);
-        #2;
-        rx_byte(12'h535);
-        #2;
-        rx_byte(12'h299);
-        #2;
-        rx_byte(12'h315);
-        #2;
-        rx_byte(12'h395);
-        #2;
-        rx_byte(12'h635);
-        #2;
-        rx_byte(12'h725);
-        #2;
-        rx_byte(12'h645);
+        #10;
+        state = 8'h03;
     end
 
-
-
     initial begin
-        #200;
+        #2000;
         $stop;
     end
-    
+
 endmodule

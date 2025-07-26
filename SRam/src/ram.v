@@ -1,4 +1,11 @@
-module ram (
+module ram 
+#(
+    parameter W = 200,
+    parameter H = 150,
+    parameter STARTROW = 0,
+    parameter STARTCOL = 0
+)
+(
     input wire clk,
     input wire [7:0] state,
 
@@ -16,7 +23,7 @@ module ram (
     output reg        spram_wr_req, 
     output reg        spram_rd_req,
     output reg        spram_rd_flag, // 读状态 0-待发送地址 1-待读取
-    output reg [7:0]  spram_rd_row,  // 当前读取行数
+    output reg [7:0]  spram_rd_row,  // 当前读取行数 0~H
     output reg [14:0] spram_addr,
     output reg [11:0] spram_wr_data,
     input  reg [11:0] spram_rd_data,
@@ -24,11 +31,14 @@ module ram (
     output reg [14:0] pix_cnt,      // 像素计数 —— 用作地址
     output reg [7:0]  buffer_cnt    // 行缓存计数器
 );
-    parameter W = 200;
-    parameter H = 150;
-    parameter PIX_STARTROW = 300 - (H / 2) - 1;
-    parameter PIX_ENDROW   = 300 + (H / 2) - 1;
     parameter PIX_TOTAL = W * H;
+
+    // 显示在屏幕中心
+    // parameter PIX_STARTROW = 300 - H / 2 - 1; 
+    // parameter PIX_ENDROW   = 300 + H / 2 - 1;
+
+    // 显示在屏幕左上角 (调试)
+    
 
     // reg [14:0] pix_cnt;                
     reg [11:0] tmp_spram_wr_data;      // 临时像素数据存储寄存器
@@ -41,6 +51,7 @@ module ram (
         pix_cnt         = 0;
         image_receiving = 0;
         image_complete  = 0;
+        image_reading   = 0;
 
         spram_wr_req    = 0;
 
@@ -58,8 +69,9 @@ module ram (
         case(state)
             // 等待状态: 重置所有控制标志
             8'h01: begin
-                image_receiving <= 0;        // 不处于接收图像状态
-                image_complete <= 0;         // 清除图像完成标志
+                image_receiving <= 0;        // 清楚接收图像状态
+                image_complete  <= 0;        // 清除图像完成标志
+                image_reading   <= 0;        // 清楚图像读标志
                 // image_preparing <= 0;
                 pix_cnt <= 0;                // 重置像素计数
                 spram_rd_flag <= 0;
@@ -89,7 +101,8 @@ module ram (
             // 显示状态：读取图像数据
             8'h03: begin
                 if (spram_rd_sig && !image_reading 
-                && y_addr >= PIX_STARTROW - 1 && y_addr <= PIX_ENDROW - 1) begin
+                && y_addr >= STARTROW - 1 && y_addr <= STARTROW + H - 1) 
+                begin
                     image_reading <= 1;  // 读数据状态标志位
                     spram_rd_req <= 1;
                     spram_wr_req <= 0;
@@ -103,7 +116,7 @@ module ram (
     always @(negedge clk) begin
         case (state)
             8'h02: begin
-                if (spram_wr_req) begin //! 写入 BSRAM
+                if (spram_wr_req) begin 
                     spram_wre     <= 1'b1;
                     spram_wr_data <= tmp_spram_wr_data;
                     spram_addr    <= pix_cnt; // 地址直接等于 pix_cnt
@@ -120,33 +133,8 @@ module ram (
                         spram_wr_req <= 0;
                     end
                 end
-                /*
-                else if (spram_rd_req) begin
-                    spram_wre  <= 1'b0;
-
-                    // 发送地址 spram_rd_flag = 0
-                    if (!spram_rd_flag) begin 
-                        spram_rd_flag <= 1'b1; 
-                        spram_addr <= pix_cnt; 
-                        pix_cnt <= pix_cnt + 1;
-                    end
-
-                    // 读取数据 spram_rd_flag = 1
-                    else begin
-                        spram_rd_flag <= 1'b0;
-                        pix_buffer[buffer_cnt] <= spram_rd_data;
-                        buffer_cnt <= buffer_cnt + 1;
-
-                        if (buffer_cnt == W - 1) begin
-                            image_preparing <= 0;
-                            image_complete <= 1;
-                            spram_rd_req <= 0;
-                            spram_rd_row <= spram_rd_row + 1;
-                        end
-                    end
-                end */
             end
-            8'h03: begin //TODO 合并 STATE02 中的预存储首行数据
+            8'h03: begin 
                 if (spram_rd_req) begin
                     spram_wre <= 1'b0;
 

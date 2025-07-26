@@ -25,11 +25,18 @@ module top (
     output [11:0] VGA_RGB
 );
 
-/********************** 串口通信参数定义 **********************/
+/********************** 宏参数定义 **********************/
 localparam CLK_FRE = 50;
 localparam DATA_WIDTH = 8;
 localparam BAUD_RATE = 9600;
 localparam PARITY_ON = 0;
+
+localparam WIDTH    = 200;
+localparam HEIGHT   = 150;
+
+//* 图片显示左上位置定义 (STARTROW, STARTCOL)
+localparam STARTROW = 0;    // 起始行 0-调试
+localparam STARTCOL = 0;    // 起始列 
 
 /********************** 内部信号参数定义 **********************/
 // 时钟信号
@@ -73,8 +80,8 @@ wire [7:0] reply_data;
 wire       reply_valid;
 
 // VGA显示相关信号
-wire [9:0] xpos;                      // 显示X坐标
-wire [9:0] ypos;                      // 显示Y坐标
+wire [11:0] xpos;                      // 显示X坐标
+wire [11:0] ypos;                      // 显示Y坐标
 wire [11:0] pixel_data;               // 像素显示数据
 
 
@@ -171,7 +178,13 @@ state u_state(
 );
 
 // VGA控制模块
-vga u_vga(
+vga #(
+    .W(WIDTH),
+    .H(HEIGHT),
+    .STARTROW(STARTROW),
+    .STARTCOL(STARTCOL)
+) u_vga
+(
     .clk(i_clk_sys),
     .state(w_state),
     .spram_rd_sig(spram_rd_sig),
@@ -194,7 +207,13 @@ spram u_spram(
 );
 
 // RAM模块
-ram u_ram(
+ram #(
+    .W(WIDTH),
+    .H(HEIGHT),
+    .STARTROW(STARTROW),
+    .STARTCOL(STARTCOL)
+) u_ram
+(
     .clk(i_clk_sys),
     .state(w_state),
     .rx_valid(pix_valid),
@@ -212,7 +231,13 @@ ram u_ram(
 );
 
 // 显示控制模块
-display u_display(
+display #(
+    .W(WIDTH),
+    .H(HEIGHT),
+    .STARTROW(STARTROW),
+    .STARTCOL(STARTCOL)
+) u_display
+(
     .clk(i_clk_sys),
     .xpos(xpos),
     .ypos(ypos),

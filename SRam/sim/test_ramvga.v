@@ -28,8 +28,8 @@ module test_ramvga;
     wire [14:0] pix_cnt;
     wire [7:0]  buffer_cnt;
     
-    wire [9:0] x_addr;
-    wire [9:0] y_addr;
+    wire [11:0] x_addr;
+    wire [11:0] y_addr;
     wire VGA_HS;
     wire VGA_VS;
 
@@ -81,7 +81,7 @@ module test_ramvga;
     end
 
     initial begin
-        #2000;
+        #20000;
         $stop;
     end
 

@@ -12,8 +12,10 @@ module test_vga;
         end
     end
 
-    wire [9:0] x_addr;
-    wire [9:0] y_addr;
+    wire [11:0] x_addr;
+    wire [11:0] y_addr;
+    wire [11:0] x_counter;
+    wire [11:0] y_counter;
     wire VGA_HS;
     wire VGA_VS;
     reg  [7:0] state;
@@ -25,6 +27,8 @@ module test_vga;
         .spram_rd_sig(spram_rd_sig),
         .xpos(x_addr),
         .ypos(y_addr),
+        .x_counter(x_counter),
+        .y_counter(y_counter),
         .VGA_HS(VGA_HS),
         .VGA_VS(VGA_VS)
     );
@@ -35,7 +39,7 @@ module test_vga;
     end
 
     initial begin
-        #2000;
+        #20000;
         $stop;
     end
 endmodule

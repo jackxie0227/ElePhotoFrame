@@ -21,7 +21,19 @@ module test_vga;
     reg  [7:0] state;
     wire spram_rd_sig;
 
-    vga u_vga(
+    parameter WIDTH = 5;
+    parameter HEIGHT = 4;
+    parameter STARTROW = 0;
+    parameter STARTCOL = 0;
+
+    vga 
+    #(
+        .W(WIDTH),
+        .H(HEIGHT),
+        .STARTROW(STARTROW),
+        .STARTCOL(STARTCOL)
+    ) u_vga
+    (
         .clk(i_clk_sys),
         .state(state),
         .spram_rd_sig(spram_rd_sig),
@@ -39,7 +51,7 @@ module test_vga;
     end
 
     initial begin
-        #20000;
+        #50000;
         $stop;
     end
 endmodule

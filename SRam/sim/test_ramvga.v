@@ -22,6 +22,7 @@ module test_ramvga;
     wire        spram_wr_req;
     wire        spram_rd_flag;
     wire        spram_rd_sig;
+    wire        spram_rd_req;
     wire        image_receiving;
     wire        image_complete;
     wire        image_reading;
@@ -30,11 +31,22 @@ module test_ramvga;
     
     wire [11:0] x_addr;
     wire [11:0] y_addr;
-    wire VGA_HS;
-    wire VGA_VS;
+    // wire VGA_HS;
+    // wire VGA_VS;
+
+    parameter WIDTH = 3;
+    parameter HEIGHT = 2;
+    parameter STARTROW = 0;
+    parameter STARTCOL = 0;
 
     /* 模块定义 */
-    ram u_ram(
+    ram 
+    #(
+        .W(WIDTH),
+        .H(HEIGHT),
+        .STARTROW(STARTROW),
+        .STARTCOL(STARTCOL)
+    ) u_ram(
         .clk(i_clk_sys),
         .state(state),
         .rx_valid(rx_valid),
@@ -42,6 +54,7 @@ module test_ramvga;
         .x_addr(x_addr),
         .y_addr(y_addr),
         .spram_wr_req(spram_wr_req),
+        .spram_rd_req(spram_rd_req),
         .spram_addr(spram_addr),
         .spram_wr_data(spram_wr_data),
         .spram_wre(spram_wre),
@@ -54,14 +67,20 @@ module test_ramvga;
         .image_receiving(image_receiving)
     );
 
-    vga u_vga(
+    vga
+    #(
+        .W(WIDTH),
+        .H(HEIGHT),
+        .STARTROW(STARTROW),
+        .STARTCOL(STARTCOL)
+    ) u_vga(
         .clk(i_clk_sys),
         .state(state),
         .spram_rd_sig(spram_rd_sig),
         .xpos(x_addr),
-        .ypos(y_addr),
-        .VGA_HS(VGA_HS),
-        .VGA_VS(VGA_VS)
+        .ypos(y_addr)
+        // .VGA_HS(VGA_HS),
+        // .VGA_VS(VGA_VS)
     );
 
     task rx_byte;
@@ -81,7 +100,7 @@ module test_ramvga;
     end
 
     initial begin
-        #20000;
+        #50000;
         $stop;
     end
 

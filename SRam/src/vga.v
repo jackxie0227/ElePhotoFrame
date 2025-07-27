@@ -17,69 +17,82 @@ module vga
     output wire        VGA_VS         // 垂直同步信号 (负极性)
 );
 
+    /* 800*600 60hz */
+    // localparam H_TOTAL  = 1040;     // 水平总周期 = 120+64+800+56
+    // localparam H_SYNC   = 120;      // 水平同步脉冲宽度
+    // localparam H_BACK   = 64;       // 水平后沿时间  
+    // localparam H_DISP   = 800;      // 水平显示时间
+    // localparam H_FRONT  = 56;       // 水平前沿时间
 
-localparam H_TOTAL  = 1040;     // 水平总周期 = 120+64+800+56
-localparam H_SYNC   = 120;      // 水平同步脉冲宽度
-localparam H_BACK   = 64;       // 水平后沿时间  
-localparam H_DISP   = 800;      // 水平显示时间
-localparam H_FRONT  = 56;       // 水平前沿时间
+    // localparam V_TOTAL  = 660;      // 垂直总周期 = 6+23+600+37  
+    // localparam V_SYNC   = 6;        // 垂直同步脉冲宽度
+    // localparam V_BACK   = 23;       // 垂直后沿时间
+    // localparam V_DISP   = 600;      // 垂直显示时间
+    // localparam V_FRONT  = 37;       // 垂直前沿时间
 
-localparam V_TOTAL  = 660;      // 垂直总周期 = 6+23+600+37  
-localparam V_SYNC   = 6;        // 垂直同步脉冲宽度
-localparam V_BACK   = 23;       // 垂直后沿时间
-localparam V_DISP   = 600;      // 垂直显示时间
-localparam V_FRONT  = 37;       // 垂直前沿时间
+    /* 测试用 */
+    localparam H_TOTAL  = 20;     // 水平总周期 = 120+64+800+56
+    localparam H_SYNC   = 3;      // 水平同步脉冲宽度
+    localparam H_BACK   = 2;       // 水平后沿时间  
+    localparam H_DISP   = 20;      // 水平显示时间
+    localparam H_FRONT  = 3;       // 水平前沿时间
 
-localparam H_START  = H_SYNC + H_BACK;         // 水平显示区域起始位置 = 184
-localparam H_END    = H_START + H_DISP;        // 水平显示区域结束位置 = 984
-localparam V_START  = V_SYNC + V_BACK;         // 垂直显示区域起始位置 = 29  
-localparam V_END    = V_START + V_DISP;        // 垂直显示区域结束位置 = 629
+    localparam V_TOTAL  = 14;      // 垂直总周期 = 6+23+600+37  
+    localparam V_SYNC   = 1;        // 垂直同步脉冲宽度
+    localparam V_BACK   = 2;       // 垂直后沿时间
+    localparam V_DISP   = 8;      // 垂直显示时间
+    localparam V_FRONT  = 3;       // 垂直前沿时间
 
-// reg [11:0] x_counter;           // 水平扫描计数器 (12位，最大值1039)
-// reg [11:0] y_counter;           // 垂直扫描计数器 (12位，最大值659)           
+    localparam H_START  = H_SYNC + H_BACK;         // 水平显示区域起始位置 = 184
+    localparam H_END    = H_START + H_DISP;        // 水平显示区域结束位置 = 984
+    localparam V_START  = V_SYNC + V_BACK;         // 垂直显示区域起始位置 = 29  
+    localparam V_END    = V_START + V_DISP;        // 垂直显示区域结束位置 = 629
 
-initial begin
-    // 计数初始化为0
-    x_counter = 12'd0;
-    y_counter = 12'd0;
-    spram_rd_sig = 0;
-end
-
-//* 计数器自增
-always @(posedge clk) begin
-    if (state == 8'h01 || state == 8'h02) begin // 在状态1和状态2时计数器保持为0
-        x_counter <= 12'd0;
-        y_counter <= 12'd0;
+    initial begin
+        // 计数初始化为0
+        x_counter = 12'd0;
+        y_counter = 12'd0;
+        spram_rd_sig = 0;
     end
-    else if (state == 8'h03) begin
-        if (x_counter == H_TOTAL - 1) begin
-            x_counter <= 12'd0; // 水平计数器清零，开始新行
-            if (y_counter == V_TOTAL - 1) begin
-                y_counter <= 12'd0; // 垂直计数器清零，开始新帧
+
+    //* 计数器自增
+    always @(posedge clk) begin
+        if (state == 8'h01 || state == 8'h02) begin // 在状态1和状态2时计数器保持为0
+            x_counter <= 12'd0;
+            y_counter <= 12'd0;
+        end
+        else if (state == 8'h03) begin
+            if (x_counter == H_TOTAL - 1) begin
+                x_counter <= 12'd0; // 水平计数器清零，开始新行
+                if (y_counter == V_TOTAL - 1) begin
+                    y_counter <= 12'd0; // 垂直计数器清零，开始新帧
+                end
+                else begin
+                    y_counter <= y_counter + 1'b1; // 垂直计数器递增，下一行
+                end
             end
             else begin
-                y_counter <= y_counter + 1'b1; // 垂直计数器递增，下一行
+                x_counter <= x_counter + 1'b1; // 水平计数器递增，下一像素
             end
         end
+    end
+
+    //* 读取信号
+    always @(posedge clk) begin
+        // 在显示行区域部分产生行读取信号 (整体上移一行)
+        if (x_counter == H_TOTAL + H_SYNC - W - 1 
+        && y_counter >= V_START - 2 && y_counter < V_START + H - 2) begin
+            spram_rd_sig <= 1;
+        end
         else begin
-            x_counter <= x_counter + 1'b1; // 水平计数器递增，下一像素
+            spram_rd_sig <= 0;
         end
     end
-end
 
-//* 读取信号
-always @(posedge clk) begin
-    //TODO 完善行读取信号功能 - 自适应起始位置
-    if (x_counter == H_START + H_DISP - 1)
-        spram_rd_sig <= 1;
-    else 
-        spram_rd_sig <= 0;
-end
+    assign VGA_HS = ~(x_counter < H_SYNC);     // 水平同步信号（负极性）
+    assign VGA_VS = ~(y_counter < V_SYNC);     // 垂直同步信号（负极性）
 
-assign VGA_HS = ~(x_counter < H_SYNC);     // 水平同步信号（负极性）
-assign VGA_VS = ~(y_counter < V_SYNC);     // 垂直同步信号（负极性）
-
-assign xpos = x_counter - H_START;         // X坐标偏移到显示区域
-assign ypos = y_counter - V_START;         // Y坐标偏移到显示区域
+    assign xpos = x_counter - H_START;         // X坐标偏移到显示区域
+    assign ypos = y_counter - V_START;         // Y坐标偏移到显示区域
 
 endmodule

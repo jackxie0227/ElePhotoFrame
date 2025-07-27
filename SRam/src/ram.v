@@ -100,8 +100,7 @@ module ram
 
             // 显示状态：读取图像数据
             8'h03: begin
-                if (spram_rd_sig && !image_reading 
-                && y_addr >= STARTROW - 1 && y_addr <= STARTROW + H - 1) 
+                if (spram_rd_sig) 
                 begin
                     image_reading <= 1;  // 读数据状态标志位
                     spram_rd_req <= 1;
@@ -136,16 +135,12 @@ module ram
             end
             8'h03: begin 
                 if (spram_rd_req) begin
-                    spram_wre <= 1'b0;
+                    spram_wre <= 1'b0; // 开启spram读数据模式
 
                     if (!spram_rd_flag) begin
                         spram_rd_flag <= 1'b1;
                         spram_addr <= pix_cnt;  // 继续从预读取的地址开始读
                         pix_cnt <= pix_cnt + 1;
-
-                        if (pix_cnt == PIX_TOTAL - 1) begin // 所有像素读取完成
-                            pix_cnt <= 0; 
-                        end
                     end
                     else begin
                         spram_rd_flag <= 1'b0;
@@ -154,6 +149,11 @@ module ram
 
                         if (buffer_cnt == W - 1) begin // 行像素读取完成
                             image_reading <= 0;
+                            spram_rd_req  <= 0;
+
+                            if (pix_cnt == PIX_TOTAL - 1) begin
+                                pix_cnt <= 0;
+                            end
                         end
                     end
                 end

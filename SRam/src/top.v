@@ -1,4 +1,10 @@
 module top (
+    /* 测试 */
+    input wire [7:0] i_test_uart_data,
+    input wire       i_test_uart_valid,
+    output reg [7:0] o_test_uart_data,
+    output reg       o_test_uart_valid,
+
     // UART
     input i_uart_rx,
     output o_uart_tx,
@@ -31,8 +37,8 @@ localparam DATA_WIDTH = 8;
 localparam BAUD_RATE = 9600;
 localparam PARITY_ON = 0;
 
-localparam WIDTH    = 200;
-localparam HEIGHT   = 150;
+localparam WIDTH    = 50;
+localparam HEIGHT   = 40;
 
 //* 图片显示左上位置定义 (STARTROW, STARTCOL)
 localparam STARTROW = 0;    // 起始行 0-调试
@@ -60,6 +66,7 @@ wire        pix_valid;
 wire [7:0]  check_code;
 wire        check_valid;
 wire        image_receiving;
+wire        image_complete;
 wire [3:0]  w_rcv_state;
 wire [14:0] pix_cnt;
 
@@ -83,13 +90,13 @@ wire       reply_valid;
 wire [11:0] xpos;                      // 显示X坐标
 wire [11:0] ypos;                      // 显示Y坐标
 wire [11:0] pixel_data;               // 像素显示数据
-
+wire        display_valid;            // 1-当前为有效显示区域
 
 
 /********************** 信号连接和赋值 **********************/
 // WIFI 串口连接
-assign o_wifi_rxd = w_tx;
-assign w_rx = i_wifi_txd;
+// assign o_wifi_rxd = w_tx;
+// assign w_rx = i_wifi_txd;
 
 
 // 状态机输入连接
@@ -102,6 +109,14 @@ assign w_tx_valid = ((image_receiving && w_state==2) ? check_valid: reply_valid)
 // 数码管显示内容 8bit-24bit
 assign seg_data = w_state;
 
+// Bypass 模式默认 oce 无效
+assign spram_oce = 0;
+
+// 测试状态跳转
+assign w_rx_data = i_test_uart_data;
+assign w_rx_done = i_test_uart_valid;
+assign o_test_uart_data = w_tx_data;
+assign o_test_uart_valid = w_tx_valid;
 
 /********************** 模块实例化 **********************/
 // 系统时钟模块
@@ -198,7 +213,7 @@ vga #(
 spram u_spram(
     .clk(i_clk_sys),
     .oce(spram_oce),
-    .ce(spram_se),
+    .ce(spram_ce),
     .reset(spram_rst),
     .wre(spram_wre),
     .ad(spram_addr),
@@ -218,16 +233,19 @@ ram #(
     .state(w_state),
     .rx_valid(pix_valid),
     .rx_data(pix_data),
+    .display_valid(display_valid),
     .x_addr(xpos),
     .y_addr(ypos),
     .pix_cnt(pix_cnt),
     .pixel_data(pixel_data),
     .image_complete(image_complete),
     .image_receiving(image_receiving),
-    .spram_rd_data(spram_dout),
     .spram_rd_sig(spram_rd_sig),
+    .spram_rd_data(spram_dout),
+    .spram_addr(spram_addr),
     .spram_wr_data(spram_din),
-    .spram_wre(spram_wre)
+    .spram_wre(spram_wre),
+    .spram_ce(spram_ce)
 );
 
 // 显示控制模块
@@ -243,7 +261,8 @@ display #(
     .ypos(ypos),
     .state(w_state),
     .pixel_data(pixel_data),
-    .VGA_RGB(VGA_RGB)
+    .VGA_RGB(VGA_RGB),
+    .display_valid(display_valid)
 );
 
 // WIFI模块

@@ -18,35 +18,37 @@ module vga
 );
 
     /* 800*600 60hz */
-    // localparam H_TOTAL  = 1040;     // 水平总周期 = 120+64+800+56
-    // localparam H_SYNC   = 120;      // 水平同步脉冲宽度
-    // localparam H_BACK   = 64;       // 水平后沿时间  
-    // localparam H_DISP   = 800;      // 水平显示时间
-    // localparam H_FRONT  = 56;       // 水平前沿时间
+    localparam H_TOTAL  = 1040;     // 水平总周期 = 120+64+800+56
+    localparam H_SYNC   = 120;      // 水平同步脉冲宽度
+    localparam H_BACK   = 64;       // 水平后沿时间  
+    localparam H_DISP   = 800;      // 水平显示时间
+    localparam H_FRONT  = 56;       // 水平前沿时间
 
-    // localparam V_TOTAL  = 660;      // 垂直总周期 = 6+23+600+37  
-    // localparam V_SYNC   = 6;        // 垂直同步脉冲宽度
-    // localparam V_BACK   = 23;       // 垂直后沿时间
-    // localparam V_DISP   = 600;      // 垂直显示时间
-    // localparam V_FRONT  = 37;       // 垂直前沿时间
+    localparam V_TOTAL  = 660;      // 垂直总周期 = 6+23+600+37  
+    localparam V_SYNC   = 6;        // 垂直同步脉冲宽度
+    localparam V_BACK   = 23;       // 垂直后沿时间
+    localparam V_DISP   = 600;      // 垂直显示时间
+    localparam V_FRONT  = 37;       // 垂直前沿时间
 
     /* 测试用 */
-    localparam H_TOTAL  = 20;     // 水平总周期 = 120+64+800+56
-    localparam H_SYNC   = 3;      // 水平同步脉冲宽度
-    localparam H_BACK   = 2;       // 水平后沿时间  
-    localparam H_DISP   = 20;      // 水平显示时间
-    localparam H_FRONT  = 3;       // 水平前沿时间
+    // localparam H_TOTAL  = 20;     // 水平总周期 = 120+64+800+56
+    // localparam H_SYNC   = 3;      // 水平同步脉冲宽度
+    // localparam H_BACK   = 2;       // 水平后沿时间  
+    // localparam H_DISP   = 20;      // 水平显示时间
+    // localparam H_FRONT  = 3;       // 水平前沿时间
 
-    localparam V_TOTAL  = 14;      // 垂直总周期 = 6+23+600+37  
-    localparam V_SYNC   = 1;        // 垂直同步脉冲宽度
-    localparam V_BACK   = 2;       // 垂直后沿时间
-    localparam V_DISP   = 8;      // 垂直显示时间
-    localparam V_FRONT  = 3;       // 垂直前沿时间
+    // localparam V_TOTAL  = 14;      // 垂直总周期 = 6+23+600+37  
+    // localparam V_SYNC   = 1;        // 垂直同步脉冲宽度
+    // localparam V_BACK   = 2;       // 垂直后沿时间
+    // localparam V_DISP   = 8;      // 垂直显示时间
+    // localparam V_FRONT  = 3;       // 垂直前沿时间
 
     localparam H_START  = H_SYNC + H_BACK;         // 水平显示区域起始位置 = 184
     localparam H_END    = H_START + H_DISP;        // 水平显示区域结束位置 = 984
     localparam V_START  = V_SYNC + V_BACK;         // 垂直显示区域起始位置 = 29  
     localparam V_END    = V_START + V_DISP;        // 垂直显示区域结束位置 = 629
+
+    localparam H_SIG = H_START + H_DISP; //! 读信号起始位置 - 容许最大图像宽度为240pix
 
     initial begin
         // 计数初始化为0
@@ -80,8 +82,8 @@ module vga
     //* 读取信号
     always @(posedge clk) begin
         // 在显示行区域部分产生行读取信号 (整体上移一行)
-        if (x_counter == H_TOTAL + H_SYNC - W - 1 
-        && y_counter >= V_START - 2 && y_counter < V_START + H - 2) begin
+        if (x_counter == H_SIG 
+        && y_counter >= V_START + STARTROW - 1 && y_counter < V_START + STARTROW + H - 1) begin
             spram_rd_sig <= 1;
         end
         else begin

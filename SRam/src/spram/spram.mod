@@ -7,7 +7,7 @@
 
 -mod_name spram
 -file_name spram
--path D:/CodeSoftware/Gowin/Project/ElePhotoFrame/SRam/src/spram/
+-path D:/Project/ElePhotoFrame/SRam/src/spram/
 -type RAM_SP
 -file_type vlg
 -depth 30000

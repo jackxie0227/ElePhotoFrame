@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QVB
 from PyQt5.QtCore import Qt
 import sys
 import subprocess
-import os
+import os # 确保导入 os 模块
 import importlib.util
 from argparse import Namespace
 
@@ -35,8 +35,16 @@ class MainWindow(QMainWindow):
     def upload_image(self):
         """执行send_image.py中的run()函数"""
         try:
+            # --- 修改开始 ---
+            # 获取当前脚本所在目录
+            script_dir = os.path.dirname(__file__)
+            # 构建 send_image.py 的绝对路径
+            send_image_path = os.path.join(script_dir, "send_image.py")
+            
             # 动态导入send_image模块
-            spec = importlib.util.spec_from_file_location("send_image", "send_image.py")
+            spec = importlib.util.spec_from_file_location("send_image", send_image_path)
+            # --- 修改结束 ---
+            
             send_image = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(send_image)
             
@@ -46,7 +54,8 @@ class MainWindow(QMainWindow):
             args.port = 5130
             args.STATECHANGE_BYTE = bytes([0x5A])
             args.chunk_size = 1024
-            args.img = os.path.join(os.path.dirname(__file__), 'images', 'usahana.jpg')
+            # 这里也使用绝对路径来定位图片，更稳妥
+            args.img = os.path.join(script_dir, 'images', 'usahana.jpg')
             
             # 执行图像发送
             send_image.send_bytes(args)
@@ -57,8 +66,16 @@ class MainWindow(QMainWindow):
     def change_state(self):
         """执行send_state.py中的run_as_server()函数"""
         try:
+            # --- 修改开始 ---
+            # 获取当前脚本所在目录
+            script_dir = os.path.dirname(__file__)
+            # 构建 send_state.py 的绝对路径
+            send_state_path = os.path.join(script_dir, "send_state.py")
+
             # 动态导入send_state模块
-            spec = importlib.util.spec_from_file_location("send_state", "send_state.py")
+            spec = importlib.util.spec_from_file_location("send_state", send_state_path)
+            # --- 修改结束 ---
+            
             send_state = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(send_state)
             

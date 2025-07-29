@@ -12,3 +12,5 @@ fpga_project/impl/
 *.mpf
 *.wlf
 *.txt
+*.gprj
+*.user

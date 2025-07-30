@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
             args.STATECHANGE_BYTE = bytes([0x5A])
             args.chunk_size = 1024
             # 这里也使用绝对路径来定位图片，更稳妥
-            args.img = os.path.join(script_dir, 'images', 'usahana.jpg')
+            args.img = os.path.join(script_dir, 'images', 'kitty.jpg')
             
             # 执行图像发送
             send_image.send_bytes(args)

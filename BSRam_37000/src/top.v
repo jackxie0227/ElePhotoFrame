@@ -60,11 +60,11 @@ localparam BAUD_RATE = 9600;
 localparam PARITY_ON = 0;
 
 localparam WIDTH    = 200;
-localparam HEIGHT   = 150;
+localparam HEIGHT   = 185;
 
 //* 图片显示左上位置定义 (STARTROW, STARTCOL)
-localparam STARTROW = 0;    // 起始行 0-调试
-localparam STARTCOL = 0;    // 起始列 
+localparam STARTROW = 254;    // 起始行 0-调试
+localparam STARTCOL = 300;    // 起始列 
 
 /********************** 内部信号参数定义 **********************/
 // 时钟信号
@@ -258,7 +258,7 @@ vga #(
 );
 
 // BSRAM模块
-SPRam_37000 u_spram(
+spram u_spram(
     .clk(i_clk_sys),
     .oce(spram_oce),
     .ce(spram_ce),

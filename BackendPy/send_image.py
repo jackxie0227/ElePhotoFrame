@@ -20,16 +20,13 @@ def parse_args():
     parser.add_argument('--STATECHANGE_BYTE',
                         type=bytes, default=bytes([0x5A]),
                         help='end signal to inform fpga')
-    parser.add_argument('--chunk_size',
-                        type=int, default=1024,
-                        help='numbers of kbytes send each time')
-    return parser.parse_args()
+    return parser.parse_args()  # 移除chunk_size参数
 
 # img => bytes
 def image2bytes(args):
     # resize
     img = Image.open(args.img)
-    img = img.resize((50, 40), Image.LANCZOS)
+    img = img.resize((200, 185), Image.LANCZOS)
     if img.mode != 'RGB':
         img = img.convert('RGB')
     
@@ -80,7 +77,6 @@ def send_bytes(args):
         sys.exit(1)
     
     # server init (hostmode connection initialize)
-    
     server, conn = connet_init(args)
     
     check_idx = 0
@@ -89,41 +85,28 @@ def send_bytes(args):
         total_sent = 0
         total_size = len(img_bytes)
         
-        # conn.send(args.START_MARKER) # send start bytes
-        # time.sleep(0.1)
-        
         start_time = time.time()
-        chunk_size = args.chunk_size
-        for i in range(0, total_size, chunk_size):
-            # send chunk bytes data
-            chunk = img_bytes[i:i+chunk_size] 
+        CHUNK_SIZE = 256  # 固定每次发送128字节
+        
+        for i in range(0, total_size, CHUNK_SIZE):
+            # 发送当前128字节块
+            chunk = img_bytes[i:i+CHUNK_SIZE] 
             conn.send(chunk) 
-            # if i % 2 == 1:
-            #     rcv = conn.recv(1)
-            #     if rcv.hex() != check_bytes[check_idx]:
-            #         print(f"\nexpect:{check_bytes[check_idx]} received:{rcv.hex()}")
-            #     else:
-            #         print(f"\nexpect:{check_bytes[check_idx]} received:{rcv.hex()}")
-            #     check_idx += 1
             total_sent += len(chunk)
             
-            # show progress
+            # 显示进度
             percent = (total_sent * 100) / total_size
             elapsed_time = time.time() - start_time
             speed = total_sent / (elapsed_time * 1024) if elapsed_time > 0 else 0
-            estimated_total = (elapsed_time / percent) * 100 if percent > 0 else 0
-            remaining = estimated_total - elapsed_time if estimated_total > 0 else 0
             
             sys.stdout.write(f"\r发送进度: {percent:.2f}% | "
-                            f"{total_sent/(1024*1024):.2f}/{total_size/(1024*1024):.2f} MB | "
-                            f"{speed:.2f} KB/s | "
-                            f"剩余: {remaining:.1f}秒")
+                            f"{total_sent/(1024):.2f}/{total_size/(1024):.2f} KB | "
+                            f"{speed:.2f} KB/s")
             sys.stdout.flush()
             
-            time.sleep(0.01)
+            time.sleep(0.5)  # 每次发送后等待0.5秒
             
         print('\n图片字节流发送完成')
-        conn.send(args.STATECHANGE_BYTE) # 跳转至 state=3 显示图片
         return True
     except Exception as e:
         print(f"图片字节流数据发送失败：{e}")
@@ -135,13 +118,13 @@ def send_bytes(args):
 def run():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     imagefoler_dir = os.path.join(base_dir, 'images')
-    image_path = os.path.join(imagefoler_dir, 'usahana.jpg')
+    image_path = os.path.join(imagefoler_dir, 'kitty.jpg')
     
     args = parse_args()
     args.img = image_path
     
     if(send_bytes(args)):
-        print('\ncomplete!')
+        print('\n传输完成!')
         
     
 if __name__ == '__main__':

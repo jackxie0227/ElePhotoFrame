@@ -36,6 +36,8 @@ module test_ram_saveimg;
     wire [7:0]  o_test_pixelcount;
     wire [7:0]  o_test_buffercnt;
 
+    wire        o_test_dispvalid;
+
     top u_top(
         .i_test_rx(i_test_rx),
         .o_test_tx(o_test_tx),
@@ -59,6 +61,8 @@ module test_ram_saveimg;
         .o_test_pixcnt(o_test_pixcnt),
         .o_test_pixelcount(o_test_pixelcount),
         .o_test_buffercnt(o_test_buffercnt),
+
+        .o_test_dispvalid(o_test_dispvalid),
 
         .i_clk_sys(i_clk_sys),
         .i_rst_n(i_rst_n)
@@ -111,8 +115,8 @@ module test_ram_saveimg;
     endtask
 
     // 小图像模拟
-    localparam WIDTH = 5;
-    localparam HEIGHT = 4;
+    localparam WIDTH = 100;
+    localparam HEIGHT = 80;
     localparam STARTROW = 0;
     localparam STARTCOL = 0;
 

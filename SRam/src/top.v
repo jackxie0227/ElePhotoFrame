@@ -1,17 +1,29 @@
 module top (
     /* 测试 */
-    // input wire [7:0] i_test_uart_data,
-    // input wire       i_test_uart_valid,
     input  wire       i_test_rx,
+    output wire       o_test_tx,
     output wire       o_test_rcv_done,
     output wire [7:0] o_test_rcv_data,
     output wire [7:0] o_test_scd_data,
     output wire       o_test_scd_valid,
     output wire [7:0] o_test_state,
+    output wire [11:0] o_test_ram_din,
+    output wire        o_test_ram_rdsig,
+    output wire [14:0] o_test_ram_addr,
+    output wire        o_test_ram_wre,
+    output wire [11:0] o_test_xpos,
+    output wire [11:0] o_test_ypos,
+    output wire [14:0] o_test_pixcnt,
+    output wire [7:0]  o_test_pixelcount,
+    output wire [7:0]  o_test_buffercnt,
+    output wire        o_test_ram_rdflag,
+    
     output wire       o_test_image_receiving,
-    output wire [7:0] o_test_curr_state,
-    output wire [7:0] o_test_next_state,
-    output wire [7:0] o_test_prev_state,
+    output wire       o_test_image_complete,
+    output wire       o_test_image_reading,
+    // output wire [7:0] o_test_curr_state,
+    // output wire [7:0] o_test_next_state,
+    // output wire [7:0] o_test_prev_state,
 
     // UART
     input i_uart_rx,
@@ -45,8 +57,10 @@ localparam DATA_WIDTH = 8;
 localparam BAUD_RATE = 9600;
 localparam PARITY_ON = 0;
 
-localparam WIDTH    = 50;
-localparam HEIGHT   = 40;
+// localparam WIDTH    = 50;
+// localparam HEIGHT   = 40;
+localparam WIDTH       = 5;
+localparam HEIGHT      = 4;
 
 //* 图片显示左上位置定义 (STARTROW, STARTCOL)
 localparam STARTROW = 0;    // 起始行 0-调试
@@ -75,8 +89,10 @@ wire [7:0]  check_code;
 wire        check_valid;
 wire        image_receiving;
 wire        image_complete;
+wire        image_reading;
 wire [3:0]  w_rcv_state;
 wire [14:0] pix_cnt;
+wire [7:0]  buffer_cnt;
 
 // SPRAM 接口信号
 wire        spram_oce;
@@ -87,6 +103,7 @@ wire [14:0] spram_addr;
 wire [11:0] spram_din;
 wire [11:0] spram_dout;
 wire        spram_rd_sig;
+wire        spram_rd_flag;
 
 // 状态机控制信号
 wire [7:0] i_data;
@@ -98,13 +115,14 @@ wire       reply_valid;
 wire [11:0] xpos;                      // 显示X坐标
 wire [11:0] ypos;                      // 显示Y坐标
 wire [11:0] pixel_data;               // 像素显示数据
+wire [7:0]  pixel_count;
 wire        display_valid;            // 1-当前为有效显示区域
 
 
 /********************** 信号连接和赋值 **********************/
 // WIFI 串口连接
-// assign o_wifi_rxd = w_tx;
-// assign w_rx = i_wifi_txd;
+assign o_wifi_rxd = w_tx;
+assign w_rx = i_wifi_txd;
 
 
 // 状态机输入连接
@@ -123,10 +141,26 @@ assign spram_oce = 0;
 assign o_test_rcv_data = w_rx_data;
 assign o_test_rcv_done = w_rx_done;
 assign w_rx = i_test_rx;
+assign o_test_tx = w_tx;
 assign o_test_scd_data = w_tx_data;
 assign o_test_scd_valid = w_tx_valid;
 assign o_test_state = w_state;
+
 assign o_test_image_receiving = image_receiving;
+assign o_test_image_complete  = image_complete;
+assign o_test_image_reading   = image_reading;
+
+assign o_test_ram_din = spram_din;
+assign o_test_ram_addr = spram_addr;
+assign o_test_ram_rdsig = spram_rd_sig;
+assign o_test_ram_wre = spram_wre;
+
+assign o_test_xpos = xpos;
+assign o_test_ypos = ypos;
+assign o_test_pixcnt = pix_cnt;
+assign o_test_pixelcount = pixel_count;
+assign o_test_buffercnt = buffer_cnt;
+assign o_test_ram_rdflag = spram_rd_flag;
 
 /********************** 模块实例化 **********************/
 // 系统时钟模块
@@ -251,9 +285,13 @@ ram #(
     .y_addr(ypos),
     .pix_cnt(pix_cnt),
     .pixel_data(pixel_data),
+    .pixel_count(pixel_count),
+    .buffer_cnt(buffer_cnt),
     .image_complete(image_complete),
     .image_receiving(image_receiving),
+    .image_reading(image_reading),
     .spram_rd_sig(spram_rd_sig),
+    .spram_rd_flag(spram_rd_flag),
     .spram_rd_data(spram_dout),
     .spram_addr(spram_addr),
     .spram_wr_data(spram_din),

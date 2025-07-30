@@ -14,8 +14,9 @@ module ram
     input wire [11:0] rx_data,
     input wire [9:0]  x_addr,
     input wire [9:0]  y_addr,
+
     output wire [11:0] pixel_data,   // VGA_RGB
-    output wire [14:0] pixel_count,  // 测试计数
+    output wire [7:0] pixel_count,  // 测试计数
 
     output reg image_complete,       // 图像存储&缓存完成标志位 
     output reg image_receiving,      // 图像正在缓存标志位
@@ -68,7 +69,7 @@ module ram
             //* 等待状态 
             8'h01: begin
                 // 图片标志位清零
-                image_receiving <= 0;
+                receiving_update_flag <= 0;
                 image_complete  <= 0;
                 image_reading   <= 0;
 
@@ -142,8 +143,9 @@ module ram
                         if (buffer_cnt == W - 1) begin
                             image_reading <= 0;
                             spram_rd_req  <= 0;
+                            buffer_cnt    <= 0;
 
-                            if (pix_cnt == PIX_TOTAL - 1) begin
+                            if (pix_cnt == PIX_TOTAL) begin
                                 pix_cnt <= 0;
                             end
                         end

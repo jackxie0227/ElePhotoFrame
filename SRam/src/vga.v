@@ -18,30 +18,30 @@ module vga
 );
 
     /* 800*600 60hz */
-    localparam H_TOTAL  = 1040;     // 水平总周期 = 120+64+800+56
-    localparam H_SYNC   = 120;      // 水平同步脉冲宽度
-    localparam H_BACK   = 64;       // 水平后沿时间  
-    localparam H_DISP   = 800;      // 水平显示时间
-    localparam H_FRONT  = 56;       // 水平前沿时间
+    // localparam H_TOTAL  = 1040;     // 水平总周期 = 120+64+800+56
+    // localparam H_SYNC   = 120;      // 水平同步脉冲宽度
+    // localparam H_BACK   = 64;       // 水平后沿时间  
+    // localparam H_DISP   = 800;      // 水平显示时间
+    // localparam H_FRONT  = 56;       // 水平前沿时间
 
-    localparam V_TOTAL  = 660;      // 垂直总周期 = 6+23+600+37  
-    localparam V_SYNC   = 6;        // 垂直同步脉冲宽度
-    localparam V_BACK   = 23;       // 垂直后沿时间
-    localparam V_DISP   = 600;      // 垂直显示时间
-    localparam V_FRONT  = 37;       // 垂直前沿时间
+    // localparam V_TOTAL  = 660;      // 垂直总周期 = 6+23+600+37  
+    // localparam V_SYNC   = 6;        // 垂直同步脉冲宽度
+    // localparam V_BACK   = 23;       // 垂直后沿时间
+    // localparam V_DISP   = 600;      // 垂直显示时间
+    // localparam V_FRONT  = 37;       // 垂直前沿时间
 
     /* 测试用 */
-    // localparam H_TOTAL  = 20;     // 水平总周期 = 120+64+800+56
-    // localparam H_SYNC   = 3;      // 水平同步脉冲宽度
-    // localparam H_BACK   = 2;       // 水平后沿时间  
-    // localparam H_DISP   = 20;      // 水平显示时间
-    // localparam H_FRONT  = 3;       // 水平前沿时间
+    localparam H_TOTAL  = 105;     // 水平总周期 = 120+64+800+56
+    localparam H_SYNC   = 12;      // 水平同步脉冲宽度
+    localparam H_BACK   = 7;       // 水平后沿时间  
+    localparam H_DISP   = 80;      // 水平显示时间
+    localparam H_FRONT  = 6;       // 水平前沿时间
 
-    // localparam V_TOTAL  = 14;      // 垂直总周期 = 6+23+600+37  
-    // localparam V_SYNC   = 1;        // 垂直同步脉冲宽度
-    // localparam V_BACK   = 2;       // 垂直后沿时间
-    // localparam V_DISP   = 8;      // 垂直显示时间
-    // localparam V_FRONT  = 3;       // 垂直前沿时间
+    localparam V_TOTAL  = 68;      // 垂直总周期 = 6+23+600+37  
+    localparam V_SYNC   = 1;        // 垂直同步脉冲宽度
+    localparam V_BACK   = 3;       // 垂直后沿时间
+    localparam V_DISP   = 60;      // 垂直显示时间
+    localparam V_FRONT  = 4;       // 垂直前沿时间
 
     localparam H_START  = H_SYNC + H_BACK;         // 水平显示区域起始位置 = 184
     localparam H_END    = H_START + H_DISP;        // 水平显示区域结束位置 = 984

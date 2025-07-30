@@ -1,9 +1,17 @@
 module top (
     /* 测试 */
-    input wire [7:0] i_test_uart_data,
-    input wire       i_test_uart_valid,
-    output reg [7:0] o_test_uart_data,
-    output reg       o_test_uart_valid,
+    // input wire [7:0] i_test_uart_data,
+    // input wire       i_test_uart_valid,
+    input  wire       i_test_rx,
+    output wire       o_test_rcv_done,
+    output wire [7:0] o_test_rcv_data,
+    output wire [7:0] o_test_scd_data,
+    output wire       o_test_scd_valid,
+    output wire [7:0] o_test_state,
+    output wire       o_test_image_receiving,
+    output wire [7:0] o_test_curr_state,
+    output wire [7:0] o_test_next_state,
+    output wire [7:0] o_test_prev_state,
 
     // UART
     input i_uart_rx,
@@ -102,9 +110,8 @@ wire        display_valid;            // 1-当前为有效显示区域
 // 状态机输入连接
 assign i_data = w_rx_data;
 
-// 数据发送逻辑
-assign w_tx_data  = ((image_receiving && w_state==2) ? check_code : reply_data);
-assign w_tx_valid = ((image_receiving && w_state==2) ? check_valid: reply_valid);
+assign w_tx_data  = image_receiving ? check_code : reply_data;
+assign w_tx_valid = image_receiving ? check_valid: reply_valid;
 
 // 数码管显示内容 8bit-24bit
 assign seg_data = w_state;
@@ -113,10 +120,13 @@ assign seg_data = w_state;
 assign spram_oce = 0;
 
 // 测试状态跳转
-assign w_rx_data = i_test_uart_data;
-assign w_rx_done = i_test_uart_valid;
-assign o_test_uart_data = w_tx_data;
-assign o_test_uart_valid = w_tx_valid;
+assign o_test_rcv_data = w_rx_data;
+assign o_test_rcv_done = w_rx_done;
+assign w_rx = i_test_rx;
+assign o_test_scd_data = w_tx_data;
+assign o_test_scd_valid = w_tx_valid;
+assign o_test_state = w_state;
+assign o_test_image_receiving = image_receiving;
 
 /********************** 模块实例化 **********************/
 // 系统时钟模块
@@ -184,9 +194,12 @@ rcv u_rcv(
 state u_state(
     .i_clk_sys(i_clk_sys),
     .i_rst_n(i_rst_n),
-    .i_data(i_data),
+    .i_data(w_rx_data),
     .i_rx_done(w_rx_done),
     .image_receiving(image_receiving),
+    .curr_state(o_test_curr_state),
+    .prev_state(o_test_prev_state),
+    .next_state(o_test_next_state),
     .o_state(w_state),
     .o_data(reply_data),
     .o_valid(reply_valid)
@@ -210,16 +223,16 @@ vga #(
 );
 
 // BSRAM模块
-spram u_spram(
-    .clk(i_clk_sys),
-    .oce(spram_oce),
-    .ce(spram_ce),
-    .reset(spram_rst),
-    .wre(spram_wre),
-    .ad(spram_addr),
-    .din(spram_din),
-    .dout(spram_dout)
-);
+// spram u_spram(
+//     .clk(i_clk_sys),
+//     .oce(spram_oce),
+//     .ce(spram_ce),
+//     .reset(spram_rst),
+//     .wre(spram_wre),
+//     .ad(spram_addr),
+//     .din(spram_din),
+//     .dout(spram_dout)
+// );
 
 // RAM模块
 ram #(

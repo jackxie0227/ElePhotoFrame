@@ -44,6 +44,9 @@ module ram
     /* 测试SPRAM */
     // reg 
 
+    // 防止 image_receiving 在下降沿更新
+    reg receiving_update_flag = 0;
+
     initial begin
         pix_cnt         = 0;
         image_receiving = 0;
@@ -88,7 +91,7 @@ module ram
             //* 接收状态
             8'h02: begin
                 if (!image_receiving && !image_complete) begin     // 状态2 首次进入
-                    image_receiving <= 1;
+                    receiving_update_flag <= 1;
                     pix_cnt         <= 0;
                 end
                 else if (image_receiving && !image_complete) begin // 状态2 接收图像中
@@ -104,7 +107,7 @@ module ram
 
                         pix_cnt <= pix_cnt + 1;
                         if (pix_cnt == PIX_TOTAL - 1) begin
-                            image_receiving <= 0;
+                            receiving_update_flag <= 0;
                             image_complete  <= 1;
                             pix_cnt         <= 0;
                         end
@@ -148,6 +151,13 @@ module ram
                 end
             end
         endcase
+    end
+
+    always @(posedge clk) begin
+        if (receiving_update_flag)
+            image_receiving <= 1;
+        else if (!receiving_update_flag)
+            image_receiving <= 0;
     end
 
     assign pixel_count = display_valid ? x_addr - STARTCOL : 0;

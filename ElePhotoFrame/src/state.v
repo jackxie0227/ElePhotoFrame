@@ -16,6 +16,9 @@ module state(
     input   wire [7:0]   i_data,           //串口接收到的8位数据
     input   wire         i_rx_done,        //串口数据接收完成标志位
     input   wire         image_receiving,  //接收图像完成标志
+    output  reg  [7:0]   curr_state,
+    output  reg  [7:0]   prev_state,
+    output  reg  [7:0]   next_state,
     output  reg  [7:0]   o_state,          //当前状态输出(01:等待 02:传输 03:显示)
     output  reg  [7:0]   o_data,           //UART发送数据输出
     output  reg          o_valid           //UART发送数据有效标志位
@@ -23,16 +26,16 @@ module state(
 
 /************************状态定义************************/
 /********************************************************/
-localparam STATE_WAIT      = 4'b0001;   //等待状态
-localparam STATE_TRANSPORT = 4'b0010;   //传输状态
-localparam STATE_DISPLAY   = 4'b0011;   //显示状态
+localparam STATE_WAIT      = 1;   //等待状态
+localparam STATE_TRANSPORT = 2;   //传输状态
+localparam STATE_DISPLAY   = 3;   //显示状态
 
 /************************状态机相关寄存器************************/
 /***************************************************************/
 reg [7:0] i_data_r;         //串口数据寄存器
-reg [7:0] curr_state;       //当前状态
-reg [7:0] next_state;       //次态
-reg [3:0] prev_state;       //前一状态，用于检测状态变化
+// reg [7:0] curr_state;       //当前状态
+// reg [7:0] next_state;       //次态
+// reg [7:0] prev_state;       //前一状态，用于检测状态变化
 
 /************************寄存器初始化************************/
 /***********************************************************/
@@ -49,9 +52,9 @@ end
 // i_data 在每个时钟上升沿更新
 // 使用 negeedge i_clk_sys 防止 i_data 还未更新
 /***************************************************************/
-always @(negedge i_clk_sys) begin
-    i_data_r <= i_data;
-end
+// always @(posedge i_clk_sys) begin
+//     i_data_r <= i_data;
+// end
 
 /************************状态机当前状态更新************************/
 /*****************************************************************/
@@ -74,7 +77,7 @@ always @(*) begin
         //****************等待状态*****************/
         STATE_WAIT:
             begin
-                if (i_data_r == 8'h5A && i_rx_done) begin
+                if (i_data == 8'h5A && i_rx_done) begin
                     next_state = STATE_TRANSPORT;
                 end
                 else begin
@@ -86,7 +89,7 @@ always @(*) begin
         STATE_TRANSPORT:
             begin
                 // 只有在图像完成接收后，才能响应状态转换命令
-                if (i_data_r == 8'h5A && i_rx_done && !image_receiving) begin
+                if (i_data == 8'h5A && i_rx_done && !image_receiving) begin
                     next_state = STATE_DISPLAY;
                 end
                 else begin
@@ -97,7 +100,7 @@ always @(*) begin
         //****************显示状态*****************/
         STATE_DISPLAY:
             begin
-                if (i_data_r == 8'h5A && i_rx_done) begin
+                if (i_data == 8'h5A && i_rx_done) begin
                     next_state = STATE_WAIT;
                 end
                 else begin

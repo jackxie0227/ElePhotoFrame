@@ -5,12 +5,16 @@ module rcv (
     input                 i_rx_done,        // 接收完成标志
     input [7:0]           i_state,          // 当前状态
     input                 image_receiving,  // 接受图片标志位
-     
-    output reg [3:0]      o_rcv_state,   // 输出当前接收状态 1 / 2
-    output reg [11:0]     o_pix,          // 输出像素数据：第一个字节全部8位 + 第二个字节高4位
-    output reg            o_pix_valid,    // 像素数据有效标志
-    output reg [7:0]      o_check_code,   // 校验码
-    output reg            o_check_valid   // 校验码有效标志
+    
+    output reg            image_ready2accept,   // 是否可以开始接收图片 (图像宽高是否接收)
+    output reg [7:0]      o_width,
+    output reg [7:0]      o_height,
+    // output reg [1:0]      o_whvalid,            // 0-空闲 1-widhtvalid 2-heightvalid
+    output reg [3:0]      o_rcv_state,          // 输出当前接收状态 1 / 2
+    output reg [11:0]     o_pix,                // 输出像素数据：第一个字节全部8位 + 第二个字节高4位
+    output reg            o_pix_valid,          // 像素数据有效标志
+    output reg [7:0]      o_check_code,         // 校验码
+    output reg            o_check_valid         // 校验码有效标志
 );
 
     // 状态定义
@@ -20,6 +24,10 @@ module rcv (
     // reg [3:0] r_current_state;              // 当前状态
     reg [7:0] r_first_byte;                 // 存储第一个字节
 
+    reg        wh_rcv_flag;    // 0-width 1-height
+    localparam STATE_WAIT_WIDTH  = 0;
+    localparam STATE_WAIT_HEIGHT = 1;
+
 
     initial begin
         o_rcv_state = STATE_WAIT_FIRST;
@@ -28,6 +36,10 @@ module rcv (
         o_check_code = 8'd0;
         o_check_valid = 1'b0;
         r_first_byte = 8'd0;
+        image_ready2accept = 0;
+        wh_rcv_flag = 0;
+        o_width = 8'h00;
+        o_height = 8'h00;
     end
 
     always @(posedge i_clk_sys or negedge i_rst_n) begin
@@ -80,4 +92,31 @@ module rcv (
         end
     end
 
+
+    // 接收图像宽高信息
+    always @(posedge i_clk_sys) begin
+        if (i_state == 8'h01) begin
+            image_ready2accept <= 0; // state01 03 默认未准备
+            wh_rcv_flag <= 0;
+            o_width   <= 200;
+            o_height  <= 185;
+            // o_whvalid <= 0;
+        end
+        else if (i_state == 8'h02) begin
+            if (!image_ready2accept && i_rx_done) begin // 开始接收 width height
+                case (wh_rcv_flag)
+                    STATE_WAIT_WIDTH : begin // 接收width
+                        o_width <= i_rx_data;
+                        wh_rcv_flag <= 1;
+                    end
+
+                    STATE_WAIT_HEIGHT: begin // 接收height
+                        o_height <= i_rx_data;
+                        wh_rcv_flag <= 0;
+                        image_ready2accept <= 1; // 已经接收到图像宽高信息，可以接收图像数据
+                    end
+                endcase
+            end
+        end
+    end
 endmodule

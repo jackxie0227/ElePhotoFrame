@@ -1,6 +1,6 @@
 `timescale 10ns/1ns
 
-module test_ram_saveimg;
+module test_img;
     reg i_clk_sys;
     reg i_rst_n;
     initial begin
@@ -11,6 +11,8 @@ module test_ram_saveimg;
             i_clk_sys = ~i_clk_sys;
         end
     end
+
+
     reg        i_test_rx;
     wire       o_test_tx;
     wire [7:0] o_test_rcv_data;
@@ -38,6 +40,12 @@ module test_ram_saveimg;
 
     wire        o_test_dispvalid;
 
+    wire        o_test_image_ready2accept;
+    wire [7:0]  o_test_width;
+    wire [7:0]  o_test_height;
+    wire [9:0]  o_test_startcol;
+    wire [9:0]  o_test_startrow;
+
     top u_top(
         .i_test_rx(i_test_rx),
         .o_test_tx(o_test_tx),
@@ -63,6 +71,12 @@ module test_ram_saveimg;
         .o_test_buffercnt(o_test_buffercnt),
 
         .o_test_dispvalid(o_test_dispvalid),
+
+        .o_test_image_ready2accept(o_test_image_ready2accept),
+        .o_test_width(o_test_width),
+        .o_test_height(o_test_height),
+        .o_test_startcol(o_test_startcol),
+        .o_test_startrow(o_test_startrow),
 
         .i_clk_sys(i_clk_sys),
         .i_rst_n(i_rst_n)
@@ -115,8 +129,8 @@ module test_ram_saveimg;
     endtask
 
     // 小图像模拟
-    localparam WIDTH = 100;
-    localparam HEIGHT = 80;
+    localparam WIDTH = 5;
+    localparam HEIGHT = 4;
     localparam STARTROW = 0;
     localparam STARTCOL = 0;
 
@@ -132,9 +146,10 @@ module test_ram_saveimg;
     initial begin
         #BIT_TIME_SIM;
         send_byte(8'h5a);
+        send_byte(WIDTH);
+        send_byte(HEIGHT);
         send_img(WIDTH*HEIGHT);
         send_byte(8'h5a);
     end
-
 
 endmodule

@@ -2,6 +2,18 @@
 - src/ 源文件
 - sim/ Modelsim仿真文件
 
-## BackendPy/ 后端图片、字节流传输
-- send_image.py 发送图片
-- send_state.py 发送状态跳转码（0x5A）
+## 环境配置
+```bash
+conda create -n elephotoframe python=3.10
+conda activate elephotoframe
+cd BackendPy/
+pip install -r requirements.txt
+```
+
+## BackendPy/ui.py 图片上传
+- 生成可执行文件
+```bash
+cd BackendPy/
+pyinstaller --onefile --windowed ui.py 
+BackendPy/dist/ui.exe
+```

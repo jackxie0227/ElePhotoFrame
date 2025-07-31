@@ -1,12 +1,6 @@
-Example/
 work/
-fpga_project/impl/
-*/impl
+*/impl/
 *.pyc
-
-/PixSend
-/Seg
-/SPI
 
 *.mti
 *.mpf
@@ -14,3 +8,13 @@ fpga_project/impl/
 *.txt
 *.gprj
 *.user
+**/*.gprj
+**/*.user
+
+.vscode
+/BackendPy/build/
+/BackendPy/dist/
+*.spec
+*/__pycache__/
+
+/.vscode/
